@@ -39,8 +39,9 @@ export async function createFeedback(params: CreateFeedbackParams) {
     });
 
     const feedback = {
-      interviewId: interviewId,
-      userId: userId,
+      interviewId,
+      userId,
+      transcript,
       totalScore: object.totalScore,
       categoryScores: object.categoryScores,
       strengths: object.strengths,
@@ -49,20 +50,38 @@ export async function createFeedback(params: CreateFeedbackParams) {
       createdAt: new Date().toISOString(),
     };
 
-    let feedbackRef;
-
     if (feedbackId) {
-      feedbackRef = db.collection("feedback").doc(feedbackId);
+      await db.collection("feedback").doc(feedbackId).update(feedback);
     } else {
-      feedbackRef = db.collection("feedback").doc();
+      await db.collection("feedback").add(feedback);
     }
 
-    await feedbackRef.set(feedback);
-
-    return { success: true, feedbackId: feedbackRef.id };
+    return { success: true, feedbackId: feedbackId || "new" };
   } catch (error) {
-    console.error("Error saving feedback:", error);
-    return { success: false };
+    console.error("Error creating feedback:", error);
+    return { success: false, error };
+  }
+}
+
+export async function createTemporaryInterview(userId: string) {
+  try {
+    const tempInterview = {
+      role: "Interview Generation",
+      type: "Generate",
+      level: "N/A",
+      questions: [],
+      techstack: [],
+      userId: userId,
+      finalized: true,
+      coverImage: "/robot.png",
+      createdAt: new Date().toISOString(),
+    };
+
+    const docRef = await db.collection("interviews").add(tempInterview);
+    return { success: true, interviewId: docRef.id };
+  } catch (error) {
+    console.error("Error creating temporary interview:", error);
+    return { success: false, error };
   }
 }
 

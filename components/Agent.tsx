@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { generator, interviewer } from "@/constants";
-import { createFeedback } from "@/lib/actions/general.action";
+import { createFeedback, createTemporaryInterview } from "@/lib/actions/general.action";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -94,15 +94,37 @@ const Agent = ({
     const handleGenerateFeedback = async (messages: SavedMessage[]) => {
       console.log("handleGenerateFeedback");
 
+      // For generate type, we need to create a temporary interview first
+      let currentInterviewId = interviewId;
+      
+      if (type === "generate" && !currentInterviewId) {
+        // Create a temporary interview for the generate call using server action
+        const { success, interviewId: tempInterviewId } = await createTemporaryInterview(userId!);
+        
+        if (success && tempInterviewId) {
+          currentInterviewId = tempInterviewId;
+        } else {
+          console.error("Error creating temporary interview");
+          router.push("/");
+          return;
+        }
+      }
+
+      if (!currentInterviewId) {
+        console.log("No interview ID available");
+        router.push("/");
+        return;
+      }
+
       const { success, feedbackId: id } = await createFeedback({
-        interviewId: interviewId!,
+        interviewId: currentInterviewId,
         userId: userId!,
         transcript: messages,
         feedbackId,
       });
 
       if (success && id) {
-        router.push(`/interview/${interviewId}/feedback`);
+        router.push(`/interview/${currentInterviewId}/feedback`);
       } else {
         console.log("Error saving feedback");
         router.push("/");
@@ -111,7 +133,8 @@ const Agent = ({
 
     if (callStatus === CallStatus.FINISHED) {
       if (type === "generate") {
-        router.push("/");
+        // For generate type, generate feedback for the conversation
+        handleGenerateFeedback(messages);
       } else {
         handleGenerateFeedback(messages);
       }
