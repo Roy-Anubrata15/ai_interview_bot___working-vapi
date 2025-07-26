@@ -107,6 +107,7 @@ Create a new file named `.env.local` in the root of your project and add the fol
 ```env
 NEXT_PUBLIC_VAPI_WEB_TOKEN=
 NEXT_PUBLIC_VAPI_WORKFLOW_ID=
+NEXT_PUBLIC_VAPI_INTERVIEW_WORKFLOW_ID=
 
 GOOGLE_GENERATIVE_AI_API_KEY=
 
@@ -125,6 +126,14 @@ FIREBASE_PRIVATE_KEY=
 ```
 
 Replace the placeholder values with your actual **[Firebase](https://firebase.google.com/)**, **[Vapi](https://vapi.ai/?utm_source=youtube&utm_medium=video&utm_campaign=jsmastery_recruitingpractice&utm_content=paid_partner&utm_term=recruitingpractice)** credentials.
+
+**Vapi Setup Instructions:**
+1. Create an account at [Vapi.ai](https://vapi.ai)
+2. Get your web token from the dashboard
+3. Create two workflows in your Vapi dashboard:
+   - **Generate Workflow**: For creating interview questions (set as `NEXT_PUBLIC_VAPI_WORKFLOW_ID`)
+   - **Interview Workflow**: For conducting interviews (set as `NEXT_PUBLIC_VAPI_INTERVIEW_WORKFLOW_ID`)
+4. Copy both workflow IDs to your environment variables
 
 **Running the Project**
 
@@ -720,5 +729,6 @@ detailed explanations, cool features, and exercises to boost your skills. Give i
    <img src="https://github.com/user-attachments/assets/b8760e69-1f81-4a71-9108-ceeb1de36741" alt="Project Banner">
 </a>
 # ai_interview_bot_last
-#   a i _ i n t e r v i e w _ b o t _ l a s t  
+#   a i _ i n t e r v i e w _ b o t _ l a s t 
+ 
  

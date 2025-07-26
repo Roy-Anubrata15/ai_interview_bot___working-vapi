@@ -97,6 +97,44 @@ export const mappings = {
   "aws amplify": "amplify",
 };
 
+export const generator: CreateAssistantDTO = {
+  name: "Interview Generator",
+  firstMessage:
+    "Hello! I'm here to help you generate interview questions. Let me ask you a few details about the role and requirements.",
+  transcriber: {
+    provider: "deepgram",
+    model: "nova-2",
+    language: "en",
+  },
+  voice: {
+    provider: "11labs",
+    voiceId: "sarah",
+    stability: 0.4,
+    similarityBoost: 0.8,
+    speed: 0.9,
+    style: 0.5,
+    useSpeakerBoost: true,
+  },
+  model: {
+    provider: "openai",
+    model: "gpt-4",
+    messages: [
+      {
+        role: "system",
+        content: `You are an AI assistant that helps generate interview questions. Your goal is to collect information from the user to create relevant interview questions.
+
+Guidelines:
+- Ask about the job role, experience level, tech stack, and interview type
+- Be conversational and professional
+- Collect all necessary information to generate appropriate questions
+- Use the variables: {{username}} and {{userid}} when referring to the user
+
+Keep responses short and conversational.`,
+      },
+    ],
+  },
+};
+
 export const interviewer: CreateAssistantDTO = {
   name: "Interviewer",
   firstMessage:
@@ -153,6 +191,11 @@ End the conversation on a polite and positive note.
       },
     ],
   },
+};
+
+// Helper function to get assistant configuration for Vapi dashboard setup
+export const getAssistantConfig = () => {
+  return JSON.stringify(interviewer, null, 2);
 };
 
 export const feedbackSchema = z.object({

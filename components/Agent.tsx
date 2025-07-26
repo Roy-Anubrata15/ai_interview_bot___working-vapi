@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
-import { interviewer } from "@/constants";
+import { generator, interviewer } from "@/constants";
 import { createFeedback } from "@/lib/actions/general.action";
 
 enum CallStatus {
@@ -34,10 +34,12 @@ const Agent = ({
   const [messages, setMessages] = useState<SavedMessage[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastMessage, setLastMessage] = useState<string>("");
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     const onCallStart = () => {
       setCallStatus(CallStatus.ACTIVE);
+      setError("");
     };
 
     const onCallEnd = () => {
@@ -63,6 +65,8 @@ const Agent = ({
 
     const onError = (error: Error) => {
       console.log("Error:", error);
+      setError(error.message);
+      setCallStatus(CallStatus.INACTIVE);
     };
 
     vapi.on("call-start", onCallStart);
@@ -113,29 +117,41 @@ const Agent = ({
       }
     }
   }, [messages, callStatus, feedbackId, interviewId, router, type, userId]);
-  const handleCall = async () => {
+
+    const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
+    setError("");
 
-    if (type === "generate") {
-      await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
-        variableValues: {
-          username: userName,
-          userid: userId,
-        },
-      });
-    } else {
-      let formattedQuestions = "";
-      if (questions) {
-        formattedQuestions = questions
-          .map((question) => `- ${question}`)
-          .join("\n");
+    try {
+      if (type === "generate") {
+        await vapi.start(generator, {
+          variableValues: {
+            username: userName,
+            userid: userId,
+          },
+          clientMessages: [],
+          serverMessages: [],
+        });
+      } else {
+        let formattedQuestions = "";
+        if (questions) {
+          formattedQuestions = questions
+            .map((question) => `- ${question}`)
+            .join("\n");
+        }
+
+        await vapi.start(interviewer, {
+          variableValues: {
+            questions: formattedQuestions,
+          },
+                    clientMessages: [],
+          serverMessages: [],
+        });
       }
-
-      await vapi.start(interviewer, {
-        variableValues: {
-          questions: formattedQuestions,
-        },
-      });
+    } catch (error: any) {
+      console.error("Vapi start error:", error);
+      setError(error.message || "Failed to start call");
+      setCallStatus(CallStatus.INACTIVE);
     }
   };
 
@@ -176,6 +192,14 @@ const Agent = ({
           </div>
         </div>
       </div>
+
+      {error && (
+        <div className="w-full flex justify-center mb-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        </div>
+      )}
 
       {messages.length > 0 && (
         <div className="transcript-border">
